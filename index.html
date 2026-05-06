@@ -301,9 +301,8 @@ body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color
 </div>
 
 <script>
-// Constants
-const SHEET_ID = '1-1mNo3jpe6lqWdVPDuPfJAYkPSnk4BDyCWufaaejBh0';
-const API_KEY = 'AIzaSyBI2w3Nh7AN8-_atD4J9iQ9Dx4E3zKQWtU'; // Public API key
+// API URL - Google Apps Script
+const API_URL = 'https://script.google.com/macros/s/AKfycbzQileb5LhdbOrigSmQ9dEIrCOwHY8nvh6aY7MGf-G14uYtzZ3mgKuBKqt4z5J8A3h-Pw/exec';
 
 // State
 let personalData = [];
@@ -319,31 +318,28 @@ document.addEventListener('DOMContentLoaded', () => {
 // Core Functions
 async function loadPersonalData() {
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Personal!A2:S20?key=${API_KEY}`;
-    const response = await fetch(url);
-    const data = await response.json();
+    const response = await fetch(API_URL);
+    const result = await response.json();
     
     personalData = [];
-    if (data.values) {
-      data.values.forEach(row => {
-        if ((row[9]||'').trim() === 'Activo' && row[1]) {
-          personalData.push({
-            nombre: row[1],
-            inicial: row[4] || '',
-            area: row[8] || 'Lima',
-            tipo: row[10] || 'Técnico',
-            dni: row[5] || '',
-            suelo: parseFloat((row[18]||'0').replace(/[,]/g,'')) || 0,
-            costo: parseFloat((row[16]||'0').replace(/[,]/g,'')) || 0
-          });
-        }
+    if (result.success && result.data) {
+      result.data.forEach(p => {
+        personalData.push({
+          nombre: p.nombre,
+          inicial: p.inicial,
+          area: p.area,
+          tipo: p.tipo,
+          dni: p.dni,
+          suelo: p.suelo,
+          costo: p.costo
+        });
       });
     }
     renderPersonal();
     updateKPIs();
   } catch(e) {
     console.error('Error loading:', e);
-    document.getElementById('personal-loading').innerHTML = 'Error al cargar datos. Verifique la conexión.';
+    document.getElementById('personal-loading').innerHTML = 'Error al cargar datos: ' + e.message;
   }
 }
 
